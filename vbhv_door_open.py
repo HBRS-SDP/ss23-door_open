@@ -14,10 +14,14 @@ from geometry_msgs.msg import PoseStamped
 from mdr_pickup_action.msg import PickupAction, PickupGoal
 from mdr_move_base_action.msg import MoveBaseAction, MoveBaseGoal
 from mdr_move_arm_action.msg import MoveArmAction, MoveArmGoal
+from mas_hsr_gripper_controller.gripper_controller import GripperController
 
 class pickAndPour :
     def __init__(self):
         rospy.init_node("pickAndPour")
+
+        # intialize gripper controller
+        self.gripper_controller = GripperController()
 
         #initialising the action client for picking
         self.client_pick = actionlib.SimpleActionClient('pickup_server', PickupAction)
@@ -125,6 +129,8 @@ class pickAndPour :
 
 
     def one_func(self):
+        # open gripper by default
+        self.gripper_controller.open()
         goal = control_msgs.msg.FollowJointTrajectoryGoal()
         traj = trajectory_msgs.msg.JointTrajectory()
         traj.joint_names = ["arm_lift_joint", "arm_flex_joint", "arm_roll_joint", "wrist_flex_joint", "wrist_roll_joint"]
@@ -144,6 +150,8 @@ class pickAndPour :
             self.action_cli.send_goal(goal)
             self.action_cli.wait_for_result()
 
+        # close gripper arm
+        self.gripper_controller.close()
         rospy.loginfo('completed 1')
 
 
@@ -171,27 +179,42 @@ class pickAndPour :
         # self.action_cli.send_goal(goal)
         # self.action_cli.wait_for_result()
 
+        # pull the latch down 
+        angles= list(range(0, -100, -15))
+        inRadians= np.deg2rad(angles)
+        wrist_roll_angles= np.round(inRadians, 2)
+        for i in wrist_roll_angles: 
+            p.positions= [0.29, 0.0, 0.0, 0.00, i]
+            p.velocities = [0, 0, 0, 0, 0]
+            p.time_from_start = rospy.Duration(1)
+            traj.points = [p]
+            goal.trajectory = traj
+            self.action_cli.send_goal(goal)
+            self.action_cli.wait_for_result()
+
+            
         # move back to open the door
-        # aligned_base_pose = PoseStamped()
-        # aligned_base_pose.header.frame_id = 'base_link'
-        # aligned_base_pose.header.stamp = rospy.Time.now()
-        # aligned_base_pose.pose.position.x = -0.1
-        # aligned_base_pose.pose.position.y = 0.0
-        # aligned_base_pose.pose.position.z = 0.0
-        # aligned_base_pose.pose.orientation.x = 0.0
-        # aligned_base_pose.pose.orientation.y = 0.0
-        # aligned_base_pose.pose.orientation.z = 0.0
-        # aligned_base_pose.pose.orientation.w = 1.0
+        aligned_base_pose = PoseStamped()
+        aligned_base_pose.header.frame_id = 'base_link'
+        aligned_base_pose.header.stamp = rospy.Time.now()
+        aligned_base_pose.pose.position.x = -0.1
+        aligned_base_pose.pose.position.y = 0.0
+        aligned_base_pose.pose.position.z = 0.0
+        aligned_base_pose.pose.orientation.x = 0.0
+        aligned_base_pose.pose.orientation.y = 0.0
+        aligned_base_pose.pose.orientation.z = 0.0
+        aligned_base_pose.pose.orientation.w = 1.0
 
-        # move_base_goal = MoveBaseGoal()
-        # move_base_goal.goal_type = MoveBaseGoal.POSE
-        # move_base_goal.pose = aligned_base_pose
-        # self.move_base_client.send_goal(move_base_goal)
-        # self.move_base_client.wait_for_result()
-        # self.move_base_client.get_result()
+        move_base_goal = MoveBaseGoal()
+        move_base_goal.goal_type = MoveBaseGoal.POSE
+        move_base_goal.pose = aligned_base_pose
+        self.move_base_client.send_goal(move_base_goal)
+        self.move_base_client.wait_for_result()
+        self.move_base_client.get_result()
 
-        # rospy.sleep(5)
-    
+        rospy.sleep(5)
+        rospy.loginfo('completed 2')
+
 def main():
     pick_pour= pickAndPour()
     # pick_pour.pick()
