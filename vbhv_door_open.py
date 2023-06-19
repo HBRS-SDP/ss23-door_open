@@ -94,12 +94,12 @@ class pickAndPour :
         rospy.sleep(5)
 
         
-    def moveSideWays(self):
+    def movebackwards(self):
         aligned_base_pose = PoseStamped()
         aligned_base_pose.header.frame_id = 'base_link'
         aligned_base_pose.header.stamp = rospy.Time.now()
-        aligned_base_pose.pose.position.x = 0.
-        aligned_base_pose.pose.position.y = 0.1
+        aligned_base_pose.pose.position.x = -(0.1/7.0)
+        aligned_base_pose.pose.position.y = 0.0
         aligned_base_pose.pose.position.z = 0.
         aligned_base_pose.pose.orientation.x = 0.
         aligned_base_pose.pose.orientation.y = 0.
@@ -142,7 +142,7 @@ class pickAndPour :
         inRadians= np.deg2rad(angles)
         wrist_roll_angles= np.round(inRadians, 2)
         for i in wrist_roll_angles: 
-            p.positions= [0.29, -0.42, 0.0, -1.00, i]
+            p.positions= [0.35, -0.42, 0.0, -1.00, i]
             p.velocities = [0, 0, 0, 0, 0]
             p.time_from_start = rospy.Duration(1)
             traj.points = [p]
@@ -152,7 +152,7 @@ class pickAndPour :
 
         # close gripper arm
         self.gripper_controller.close()
-        rospy.loginfo('completed 1')
+        rospy.loginfo('Door Handle Grasped')
 
 
         # # use this to grash the door handle
@@ -180,20 +180,22 @@ class pickAndPour :
         # self.action_cli.wait_for_result()
 
         # pull the latch down 
-        angles= list(range(0, -100, -15))
-        inRadians= np.deg2rad(angles)
-        wrist_roll_angles= np.round(inRadians, 2)
-        for i in wrist_roll_angles: 
-            p.positions= [0.29, 0.0, 0.0, 0.00, i]
+        # angles= list(range(-35, -28, 1))
+        # inRadians= np.deg2rad(angles)
+        # wrist_roll_angles= np.round(inRadians, 2)
+        for i in range(1,5): 
+            p.positions= [abs(i/100 - 0.35), -0.50, 0.0, -1.00, np.round(np.deg2rad(-99), 2)]
             p.velocities = [0, 0, 0, 0, 0]
             p.time_from_start = rospy.Duration(1)
             traj.points = [p]
             goal.trajectory = traj
+            # self.movebackwards()
             self.action_cli.send_goal(goal)
             self.action_cli.wait_for_result()
 
+        rospy.loginfo('Door Handle Unlatched')
             
-        # move back to open the door
+        # # move back to open the door
         aligned_base_pose = PoseStamped()
         aligned_base_pose.header.frame_id = 'base_link'
         aligned_base_pose.header.stamp = rospy.Time.now()
@@ -212,8 +214,8 @@ class pickAndPour :
         self.move_base_client.wait_for_result()
         self.move_base_client.get_result()
 
-        rospy.sleep(5)
-        rospy.loginfo('completed 2')
+        # rospy.sleep(5)
+        rospy.loginfo('Moved back by 0.1')
 
 def main():
     pick_pour= pickAndPour()
