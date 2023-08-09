@@ -21,7 +21,7 @@ class pickAndPour :
     def __init__(self):
         rospy.init_node("pickAndPour")
 
-        # intialize gripper controller
+        # intialize gripper controllerr
         self.gripper_controller = GripperController()
 
         #initialising the action client for picking
