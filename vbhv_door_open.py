@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 
 import sys
@@ -95,25 +96,29 @@ class pickAndPour :
 
         
     def movebackwards(self):
+        val = np.linspace(0,3,5)
         aligned_base_pose = PoseStamped()
         aligned_base_pose.header.frame_id = 'base_link'
         aligned_base_pose.header.stamp = rospy.Time.now()
-        aligned_base_pose.pose.position.x = -(0.1/7.0)
-        aligned_base_pose.pose.position.y = 0.0
-        aligned_base_pose.pose.position.z = 0.
-        aligned_base_pose.pose.orientation.x = 0.
-        aligned_base_pose.pose.orientation.y = 0.
-        aligned_base_pose.pose.orientation.z = 0.
-        aligned_base_pose.pose.orientation.w = 1.
+        for i in val:
+            print(i)
+            print(aligned_base_pose.pose.position.y)
+            aligned_base_pose.pose.position.x = -round((i/10),2)
+            aligned_base_pose.pose.position.y = -round((i/10)**2,2)
+            aligned_base_pose.pose.position.z = 0.
+            aligned_base_pose.pose.orientation.x = -0.15
+            aligned_base_pose.pose.orientation.y = 0.1
+            aligned_base_pose.pose.orientation.z = 0.05
+            aligned_base_pose.pose.orientation.w = 0.924
 
-        move_base_goal = MoveBaseGoal()
-        move_base_goal.goal_type = MoveBaseGoal.POSE
-        move_base_goal.pose = aligned_base_pose
-        self.move_base_client.send_goal(move_base_goal)
-        self.move_base_client.wait_for_result()
-        self.move_base_client.get_result()
-
-        rospy.sleep(5)
+            move_base_goal = MoveBaseGoal()
+            move_base_goal.goal_type = MoveBaseGoal.POSE
+            move_base_goal.pose = aligned_base_pose
+            self.move_base_client.send_goal(move_base_goal)
+            self.move_base_client.wait_for_result()
+            self.move_base_client.get_result()
+            print(self.move_base_client.get_result())
+            # rospy.sleep(5)
 
 
     def moveToNeutral(self):
@@ -137,7 +142,7 @@ class pickAndPour :
         p = trajectory_msgs.msg.JointTrajectoryPoint()
 
 
-        # # #angles from 0 to -90 degress to achieve the pouring action
+        #angles from 0 to -90 degress to achieve the pouring action
         angles= list(range(0, -100, -15))
         inRadians= np.deg2rad(angles)
         wrist_roll_angles= np.round(inRadians, 2)
@@ -154,69 +159,44 @@ class pickAndPour :
         self.gripper_controller.close()
         rospy.loginfo('Door Handle Grasped')
 
+        # unlatching process
 
-        # # use this to grash the door handle
-        # move_arm_goal = MoveArmGoal()
-        # move_arm_goal.goal_type = MoveArmGoal.NAMED_TARGET
-        # move_arm_goal.named_target = "grasp"
-        # self.move_arm_client.send_goal(move_arm_goal)
-        # rospy.sleep(2)
-        # self.move_arm_client.wait_for_result()
-        # self.move_arm_client.get_result()
-        # rospy.loginfo("Completed 2")
-        
-        # rospy.sleep(5)
-
-        # unlatch the door
-        # traj.joint_names = ["arm_lift_joint", "arm_flex_joint", "arm_roll_joint", "wrist_flex_joint", "wrist_roll_joint"]
-        # p = trajectory_msgs.msg.JointTrajectoryPoint()
-        # p.positions = [0.29, -0.42, 0.0, -1.00, 0.0]
-        # p.velocities = [0,0,0,0,0]
-        # p.time_from_start = rospy.Duration(1)
-        # traj.points = [p]
-        # goal.trajectory = traj
-
-        # self.action_cli.send_goal(goal)
-        # self.action_cli.wait_for_result()
-
-        # pull the latch down 
-        # angles= list(range(-35, -28, 1))
-        # inRadians= np.deg2rad(angles)
-        # wrist_roll_angles= np.round(inRadians, 2)
-        for i in range(1,5): 
-            p.positions= [abs(i/100 - 0.35), -0.50, 0.0, -1.00, np.round(np.deg2rad(-99), 2)]
+        # first stage
+        # angles from -100 to -60 degress to achieve the pouring action
+        angles= list(range(-90, -55, 15))
+        inRadians= np.deg2rad(angles)
+        wrist_roll_angles= np.round(inRadians, 2)
+        for i in wrist_roll_angles: 
+            p.positions= [0.35, -0.42, 0.0, -1.00, i]
             p.velocities = [0, 0, 0, 0, 0]
             p.time_from_start = rospy.Duration(1)
             traj.points = [p]
             goal.trajectory = traj
-            # self.movebackwards()
             self.action_cli.send_goal(goal)
-            self.action_cli.wait_for_result()
+            self.action_cli.wait_for_result()    
+        
+        # second stage 
+        angles= list(range(-55, -45, 15))
+        inRadians= np.deg2rad(angles)
+        wrist_roll_angles= np.round(inRadians, 2)
+        for i in wrist_roll_angles: 
+            p.positions= [0.32, -0.42, 0.0, -1.00, i]
+            p.velocities = [0, 0, 0, 0, 0]
+            p.time_from_start = rospy.Duration(1)
+            traj.points = [p]
+            goal.trajectory = traj
+            self.action_cli.send_goal(goal)
+            self.action_cli.wait_for_result()   
 
+        # close gripper arm
+        self.gripper_controller.close()
         rospy.loginfo('Door Handle Unlatched')
-            
-        # # move back to open the door
-        aligned_base_pose = PoseStamped()
-        aligned_base_pose.header.frame_id = 'base_link'
-        aligned_base_pose.header.stamp = rospy.Time.now()
-        aligned_base_pose.pose.position.x = -0.1
-        aligned_base_pose.pose.position.y = 0.0
-        aligned_base_pose.pose.position.z = 0.0
-        aligned_base_pose.pose.orientation.x = 0.0
-        aligned_base_pose.pose.orientation.y = 0.0
-        aligned_base_pose.pose.orientation.z = 0.0
-        aligned_base_pose.pose.orientation.w = 1.0
 
-        move_base_goal = MoveBaseGoal()
-        move_base_goal.goal_type = MoveBaseGoal.POSE
-        move_base_goal.pose = aligned_base_pose
-        self.move_base_client.send_goal(move_base_goal)
-        self.move_base_client.wait_for_result()
-        self.move_base_client.get_result()
+        # now move back a bit
+        #self.movebackwards()
+        #rospy.loginfo('Moved back a bit')
 
-        # rospy.sleep(5)
-        rospy.loginfo('Moved back by 0.1')
-
+        
 def main():
     pick_pour= pickAndPour()
     # pick_pour.pick()

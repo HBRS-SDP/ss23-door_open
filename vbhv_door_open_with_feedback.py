@@ -160,7 +160,6 @@ class pickAndPour :
         p = trajectory_msgs.msg.JointTrajectoryPoint()
 
 
-        #angles from 0 to -90 degress to achieve the pouring action
         angles= list(range(0, -100, -15))
         inRadians= np.deg2rad(angles)
         wrist_roll_angles= np.round(inRadians, 2)
@@ -179,9 +178,22 @@ class pickAndPour :
 
         # unlatching process
 
-        # first stage
-        # angles from -100 to -60 degress to achieve the pouring action
-        angles= list(range(-90, -55, 15))
+        # first stage - left handle inside
+        ## angles from -100 to -60 degress to achieve the pouring action
+        #angles= list(range(-90, -55, 15))
+        #inRadians= np.deg2rad(angles)
+        #wrist_roll_angles= np.round(inRadians, 2)
+        #for i in wrist_roll_angles: 
+        #    p.positions= [0.35, -0.42, 0.0, -1.00, i]
+        #    p.velocities = [0, 0, 0, 0, 0]
+        #    p.time_from_start = rospy.Duration(1)
+        #    traj.points = [p]
+        #    goal.trajectory = traj
+        #    self.action_cli.send_goal(goal)
+        #    self.action_cli.wait_for_result()    
+
+        # first stage - right handle inside
+        angles= list(range(-100, -135, -15))
         inRadians= np.deg2rad(angles)
         wrist_roll_angles= np.round(inRadians, 2)
         for i in wrist_roll_angles: 
@@ -191,14 +203,27 @@ class pickAndPour :
             traj.points = [p]
             goal.trajectory = traj
             self.action_cli.send_goal(goal)
-            self.action_cli.wait_for_result()    
+            self.action_cli.wait_for_result() 
         
-        # second stage 
-        angles= list(range(-55, -45, 15))
+        ## second stage 
+        #angles= list(range(-55, -45, 15))
+        #inRadians= np.deg2rad(angles)
+        #wrist_roll_angles= np.round(inRadians, 2)
+        #for i in wrist_roll_angles: 
+        #    p.positions= [0.32, -0.42, 0.0, -1.00, i]
+        #    p.velocities = [0, 0, 0, 0, 0]
+        #    p.time_from_start = rospy.Duration(1)
+        #    traj.points = [p]
+        #    goal.trajectory = traj
+        #    self.action_cli.send_goal(goal)
+        #    self.action_cli.wait_for_result()   
+
+        # second stage - right door inside
+        angles= list(range(-135, -145, -15))
         inRadians= np.deg2rad(angles)
         wrist_roll_angles= np.round(inRadians, 2)
         for i in wrist_roll_angles: 
-            p.positions= [0.32, -0.42, 0.0, -1.00, i]
+            p.positions= [0.31, -0.42, 0.0, -1.00, i]
             p.velocities = [0, 0, 0, 0, 0]
             p.time_from_start = rospy.Duration(1)
             traj.points = [p]

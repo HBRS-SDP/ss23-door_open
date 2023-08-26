@@ -6,7 +6,7 @@
 import math
 # import os
 import sys
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Float32
 # import actionlib
 import numpy as np
 from scipy import signal
@@ -55,9 +55,25 @@ def compute_difference(pre_data_list, post_data_list,initial,post):
     y_old=pre_data_list[1]
     z_old=pre_data_list[2]
 
-    # Calcurate square sum of difference
+    # Calculate square sum of difference
     result=math.sqrt(math.pow(x_old-x_new,2)+math.pow(y_old-y_new,2)+math.pow(z_old - z_new,2))
     return result
+
+def get_max_directional_force(x, y, z):
+    magnitudes = [abs(x), abs(y), abs(z)]
+    max_magnitude = max(magnitudes)
+    
+    if max_magnitude == abs(x):
+        force = x
+    elif max_magnitude == abs(y):
+        force = y
+    else:
+        force = z
+
+    direction = math.degrees(math.atan2(z, y))
+    
+
+    return direction
 
 class ForceSensorCapture(object):
     """Subscribe and hold force sensor data"""
@@ -98,9 +114,9 @@ class ForceSensorCapture(object):
     def __ft_sensor_cb(self, data):
         
         # Getting force as three components
-        self._force_data_x = data.wrench.force.x
-        self._force_data_y = data.wrench.force.y
-        self._force_data_z = data.wrench.force.z
+        force_data_x = data.wrench.force.x
+        force_data_y = data.wrench.force.y
+        force_data_z = data.wrench.force.z
         
         # Applying low pass filter for force values
 
@@ -108,9 +124,9 @@ class ForceSensorCapture(object):
         FY = []
         FZ = []
 
-        FX.append(self._force_data_x)
-        FY.append(self._force_data_y)
-        FZ.append(self._force_data_z)
+        FX.append(force_data_x)
+        FY.append(force_data_y)
+        FZ.append(force_data_z)
 
         # Sampling frequency
         fs = 124.95 
@@ -134,6 +150,8 @@ class ForceSensorCapture(object):
 def calculate_force():
 
     pub = rospy.Publisher('force',Bool, queue_size = 10)
+    pub_force = rospy.Publisher('force_values',Float32, queue_size = 10)
+    pub_max_force = rospy.Publisher('max_force',Float32, queue_size = 10)
     # Start force sensor capture
     force_sensor_capture = ForceSensorCapture()
 
@@ -148,7 +166,6 @@ def calculate_force():
     
     # Getting current force
     post_force_list = force_sensor_capture.get_current_force()
-
     post_angle=force_sensor_capture.get_current_angle()
 
 
@@ -164,15 +181,21 @@ def calculate_force():
         # Getting current angle
         post_angle=force_sensor_capture.get_current_angle()
 
+        #print(post_force_list[0][0],post_force_list[1][0],post_force_list[2][0])
+        max_force = get_max_directional_force(post_force_list[0][0],post_force_list[1][0],post_force_list[2][0])
+        print(max_force)
+        pub_max_force.publish(max_force)
+
 
         # Computing difference from initial and new force sensor readings
 
         force_difference = compute_difference(pre_force_list, post_force_list,pre_angle,post_angle)
+        pub_force.publish(force_difference)
         if force_difference > 45:
             pub.publish(True)
         else:
             pub.publish(False)
-        print(force_difference)
+        #print(force_difference)
         rospy.sleep(0.1)
 
 
@@ -180,4 +203,3 @@ if __name__ == '__main__':
     rospy.init_node('hsrb_get_force')
     calculate_force()
     rospy.spin()
-
