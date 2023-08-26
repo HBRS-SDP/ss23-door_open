@@ -6,7 +6,7 @@ import roslib
 import actionlib
 from geometry_msgs.msg import PoseStamped
 
-from mas_hsr_move_arm_action.msg import MoveArmAction, MoveArmGoal
+from mdr_move_arm_action.msg import MoveArmAction, MoveArmGoal
 
 
 
@@ -25,14 +25,14 @@ if __name__ == '__main__':
     pose = PoseStamped()
     pose.header.frame_id = 'base_link'
 
-    pose.pose.position.x = 0.392
-    pose.pose.position.y = 0.069
-    pose.pose.position.z = 1.043
+    pose.pose.position.x = -0.511
+    pose.pose.position.y = -0.376
+    pose.pose.position.z = 0.893
 
-    pose.pose.orientation.x = 0.556
-    pose.pose.orientation.y = 0.258
-    pose.pose.orientation.z = 0.716
-    pose.pose.orientation.w = 0.333
+    #pose.pose.orientation.x = 0.556
+    #pose.pose.orientation.y = 0.258
+    #pose.pose.orientation.z = 0.716
+    #pose.pose.orientation.w = 0.333
 
     goal.end_effector_pose = pose
     goal.dmp_name = ''

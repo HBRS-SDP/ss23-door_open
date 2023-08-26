@@ -176,22 +176,7 @@ class pickAndPour :
         self.gripper_controller.close()
         rospy.loginfo('Door Handle Grasped')
 
-        # unlatching process
-
-        # first stage - left handle inside
-        ## angles from -100 to -60 degress to achieve the pouring action
-        #angles= list(range(-90, -55, 15))
-        #inRadians= np.deg2rad(angles)
-        #wrist_roll_angles= np.round(inRadians, 2)
-        #for i in wrist_roll_angles: 
-        #    p.positions= [0.35, -0.42, 0.0, -1.00, i]
-        #    p.velocities = [0, 0, 0, 0, 0]
-        #    p.time_from_start = rospy.Duration(1)
-        #    traj.points = [p]
-        #    goal.trajectory = traj
-        #    self.action_cli.send_goal(goal)
-        #    self.action_cli.wait_for_result()    
-
+        # unlatching process  
         # first stage - right handle inside
         angles= list(range(-100, -135, -15))
         inRadians= np.deg2rad(angles)
@@ -206,18 +191,6 @@ class pickAndPour :
             self.action_cli.wait_for_result() 
         
         ## second stage 
-        #angles= list(range(-55, -45, 15))
-        #inRadians= np.deg2rad(angles)
-        #wrist_roll_angles= np.round(inRadians, 2)
-        #for i in wrist_roll_angles: 
-        #    p.positions= [0.32, -0.42, 0.0, -1.00, i]
-        #    p.velocities = [0, 0, 0, 0, 0]
-        #    p.time_from_start = rospy.Duration(1)
-        #    traj.points = [p]
-        #    goal.trajectory = traj
-        #    self.action_cli.send_goal(goal)
-        #    self.action_cli.wait_for_result()   
-
         # second stage - right door inside
         angles= list(range(-135, -145, -15))
         inRadians= np.deg2rad(angles)
@@ -238,6 +211,7 @@ class pickAndPour :
         while not rospy.is_shutdown():
             self.force_feedback_sub = rospy.Subscriber('force', Bool, self.get_force_feedback)
             rospy.sleep(0.1)
+        rospy.loginfo('Received force feedback')
         # now move back a bit
         #self.movebackwards()
         #rospy.loginfo('Moved back a bit')
@@ -245,9 +219,6 @@ class pickAndPour :
         
 def main():
     pick_pour= pickAndPour()
-    # pick_pour.pick()
-    # pick_pour.moveSideWays()
-    # pick_pour.moveToNeutral()
     pick_pour.one_func()
 
 
