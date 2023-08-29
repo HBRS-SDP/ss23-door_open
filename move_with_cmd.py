@@ -17,14 +17,30 @@ class ForceToVelocityNode:
         self.force_threshold = -30.0
         self.force_another_threshold = -50
         self.if_left = False
-
+        self.in_loop = False
         self.sub_force = rospy.Subscriber('/max_force', Float32, self.force_callback)
         self.pub_cmd_vel = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=10)
         rospy.on_shutdown(self.shutdown)
 
+    # def is_continuously_decreasing(input_values, tolerance_threshold, min_streak_length):
+    #     streak = 0
+    #     max_streak = 0
+    #     is_trend_decreasing = False
+        
+    #     for i in range(1, len(input_values)):
+    #         if input_values[i] <= input_values[i - 1] + tolerance_threshold:
+    #             streak += 1
+    #             max_streak = max(max_streak, streak)
+    #             if streak >= min_streak_length:
+    #                 is_trend_decreasing = True
+    #         else:
+    #             streak = 0
+        
+    #     return is_trend_decreasing, max_streak
+
     def force_callback(self, force_msg):
 
-        if force_msg.data > -30.0:
+        if force_msg.data > -30.0 and self.in_loop == False:
             print("first loop")
             self.linear_velocity = -0.01
             self.linear_velocity_y = 0.0
@@ -32,21 +48,26 @@ class ForceToVelocityNode:
         else:
             self.linear_velocity = 0.0
 
-            if force_msg.data < -30.0 and self.if_left == False and force_msg.data > -33.0:
+            if self.if_left == False:# and force_msg.data > -33.0:
+                self.in_loop = True
+                if force_msg.data > 15.0:
+                    self.in_loop = False
+                self.if_left = False
                 print("going right")
                 print(self.if_left)
                 self.linear_velocity_y = -0.01
             else:
                 self.linear_velocity_y = 0.0
-                print("In else")
-
-                if force_msg.data < -33.0:
-                    self.if_left = True
-                    print("going left")
-                    self.linear_velocity_y = 0.01
-                    self.linear_velocity = 0.0
-                else:
-                    self.linear_velocity_y = 0.0
+                # print("In else")
+                # if force_msg.data < -33.0: 
+                self.in_loop = True
+                if force_msg.data > 15.0:
+                    self.in_loop = False
+                self.if_left = True
+                print(force_msg.data)
+                print("going left")
+                self.linear_velocity_y = 0.01
+                self.linear_velocity = 0.0
     #    if force_msg.data < self.force_threshold:
     #        self.angular_published = True
     #        print("here")
