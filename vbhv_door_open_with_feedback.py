@@ -177,7 +177,7 @@ class pickAndPour :
         rospy.loginfo('Door Handle Grasped')
 
         # unlatching process  
-        # first stage - right handle inside
+        # first stage - greesn door handle inside
         angles= list(range(-100, -135, -15))
         inRadians= np.deg2rad(angles)
         wrist_roll_angles= np.round(inRadians, 2)
@@ -191,7 +191,7 @@ class pickAndPour :
             self.action_cli.wait_for_result() 
         
         ## second stage 
-        # second stage - right door inside
+        # second stage - green door handle inside
         angles= list(range(-135, -145, -15))
         inRadians= np.deg2rad(angles)
         wrist_roll_angles= np.round(inRadians, 2)
@@ -202,7 +202,9 @@ class pickAndPour :
             traj.points = [p]
             goal.trajectory = traj
             self.action_cli.send_goal(goal)
-            self.action_cli.wait_for_result()   
+            self.action_cli.wait_for_result() 
+
+          
 
         # close gripper arm
         self.gripper_controller.close()
