@@ -10,7 +10,7 @@ from std_msgs.msg import Bool, Float32
 # import actionlib
 import numpy as np
 from scipy import signal
-
+import statistics
 import time 
 # from actionlib_msgs.msg import GoalStatus
 from geometry_msgs.msg import WrenchStamped
@@ -174,17 +174,22 @@ def calculate_force():
    
 
     rospy.Rate(10)
+    median_angles_list=[]
     while not rospy.is_shutdown():
         # Getting new force sensor reading
-        post_force_list = force_sensor_capture.get_current_force()
+        for i in range(5):
+            post_force_list = force_sensor_capture.get_current_force()
         
         # Getting current angle
-        post_angle=force_sensor_capture.get_current_angle()
+            post_angle=force_sensor_capture.get_current_angle()
 
         #print(post_force_list[0][0],post_force_list[1][0],post_force_list[2][0])
-        max_force = get_max_directional_force(post_force_list[0][0],post_force_list[1][0],post_force_list[2][0])
-        print(max_force)
-        pub_max_force.publish(max_force)
+            max_force = get_max_directional_force(post_force_list[0][0],post_force_list[1][0],post_force_list[2][0])
+            median_angles_list.append(max_force)
+        med = statistics.median(median_angles_list)
+        print(med)
+        pub_max_force.publish(med)
+        median_angles_list=[]
 
 
         # Computing difference from initial and new force sensor readings
