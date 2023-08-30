@@ -11,6 +11,7 @@ import control_msgs.msg
 import trajectory_msgs.msg
 import controller_manager_msgs.srv
 from geometry_msgs.msg import PoseStamped
+from std_msgs.msg import Bool
 
 from mdr_pickup_action.msg import PickupAction, PickupGoal
 from mdr_move_base_action.msg import MoveBaseAction, MoveBaseGoal
@@ -50,6 +51,7 @@ class pickAndPour :
         self.speak=1
         self.direction_multiplier = 1
         self.say_pub = rospy.Publisher('/say', String, latch=True, queue_size=1)
+        self.pub  = rospy.Publisher('Handle_unlatched', Bool, queue_size=10)
         #initialising the client for moving arm to neutral position
         try:
             self.move_arm_client = actionlib.SimpleActionClient("move_arm_server", MoveArmAction)
@@ -178,6 +180,7 @@ class pickAndPour :
 
         # unlatching process  
         # first stage - greesn door handle inside
+        # first stage - greesn door handle inside
         angles= list(range(-100, -135, -15))
         inRadians= np.deg2rad(angles)
         wrist_roll_angles= np.round(inRadians, 2)
@@ -192,6 +195,7 @@ class pickAndPour :
         
         ## second stage 
         # second stage - green door handle inside
+        # second stage - green door handle inside
         angles= list(range(-135, -145, -15))
         inRadians= np.deg2rad(angles)
         wrist_roll_angles= np.round(inRadians, 2)
@@ -202,6 +206,7 @@ class pickAndPour :
             traj.points = [p]
             goal.trajectory = traj
             self.action_cli.send_goal(goal)
+            self.action_cli.wait_for_result() 
             self.action_cli.wait_for_result() 
 
           

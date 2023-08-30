@@ -180,7 +180,7 @@ class pickAndPour :
         inRadians= np.deg2rad(angles)
         wrist_roll_angles= np.round(inRadians, 2)
         for i in wrist_roll_angles: 
-            p.positions= [0.32, -0.42, 0.0, -1.00, i]
+            p.positions= [0.31, -0.42, 0.0, -1.00, i]
             p.velocities = [0, 0, 0, 0, 0]
             p.time_from_start = rospy.Duration(1)
             traj.points = [p]

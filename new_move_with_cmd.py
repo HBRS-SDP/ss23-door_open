@@ -16,31 +16,50 @@ class ForceToVelocityNode:
 
         self.force_threshold = -30.0
         self.force_another_threshold = -50
-<<<<<<< Updated upstream
-        self.if_left = False
-=======
-        self.if_left = True
->>>>>>> Stashed changes
+        self.direction = None # earlier is_left
         self.in_loop = False
+        self.trend_value_count = 0
+        self.force_trend_values = []
         self.sub_force = rospy.Subscriber('/max_force', Float32, self.force_callback)
         self.pub_cmd_vel = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=10)
         rospy.on_shutdown(self.shutdown)
 
-    # def is_continuously_decreasing(input_values, tolerance_threshold, min_streak_length):
-    #     streak = 0
-    #     max_streak = 0
-    #     is_trend_decreasing = False
+    def check_force_trend(self, input_values, tolerance_threshold = 5, min_streak_length = 3):
+        dir = None
+        streak = 0
+        max_streak = 0
+        is_trend_decreasing = False
         
-    #     for i in range(1, len(input_values)):
-    #         if input_values[i] <= input_values[i - 1] + tolerance_threshold:
-    #             streak += 1
-    #             max_streak = max(max_streak, streak)
-    #             if streak >= min_streak_length:
-    #                 is_trend_decreasing = True
-    #         else:
-    #             streak = 0
+        for i in range(1, len(input_values)):
+            if input_values[i] <= input_values[i - 1] + tolerance_threshold:
+                streak += 1
+                max_streak = max(max_streak, streak)
+                if streak >= min_streak_length:
+                    is_trend_decreasing = True
+            else:
+                streak = 0
+        print(max_streak)
+
+        if is_trend_decreasing == True:
+            dir = 'Left'
+        else:
+            dir = 'Right'
         
-    #     return is_trend_decreasing, max_streak
+        print(dir)
+        return dir
+
+    def decide_direction_of_movement(self, force_angle):
+        if self.trend_value_count <= 50: # TODO: change this to checking length of list and clean list after done
+            # self.linear_velocity_y = -0.01 # pass this back to callback
+            self.force_trend_values.append(force_angle)
+            self.trend_value_count += 1
+        else:
+            self.direction  = self.check_force_trend(self.force_trend_values)
+
+        
+        # if self.trend_value_set == True:
+        #    self.direction  = check_force_trend(self.force_trend_values)
+
 
     def force_callback(self, force_msg):
 
@@ -50,24 +69,32 @@ class ForceToVelocityNode:
             self.linear_velocity_y = 0.0
 
         else:
+            print("we in else")
+            print(self.direction)
+            self.in_loop = True
+            if force_msg.data > 15.0:
+                self.in_loop = False
+            if self.direction == None:
+                self.linear_velocity_y = -0.01
+                self.decide_direction_of_movement(force_msg.data)
+            
+
             self.linear_velocity = 0.0
 
-            if self.if_left == False:# and force_msg.data > -33.0:
-                self.in_loop = True
-                if force_msg.data > 15.0:
-                    self.in_loop = False
-                self.if_left = False
+            if self.direction == 'Right':# and force_msg.data > -33.0:
+                # self.in_loop = True
+                # if force_msg.data > 15.0:
+                #     self.in_loop = False
                 print("going right")
-                print(self.if_left)
+                print(self.direction)
                 self.linear_velocity_y = -0.01
-            else:
+            if self.direction == 'Left':
                 self.linear_velocity_y = 0.0
                 # print("In else")
                 # if force_msg.data < -33.0: 
-                self.in_loop = True
-                if force_msg.data > 15.0:
-                    self.in_loop = False
-                self.if_left = True
+                # self.in_loop = True
+                # if force_msg.data > 15.0:
+                #     self.in_loop = False
                 print(force_msg.data)
                 print("going left")
                 self.linear_velocity_y = 0.01
