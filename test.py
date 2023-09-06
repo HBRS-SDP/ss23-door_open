@@ -1,3 +1,4 @@
+q
 import rospy
 import tf2_ros
 import tf
@@ -14,25 +15,31 @@ object_camera_point.header.frame_id = "head_rgbd_sensor_link"  # Replace with yo
 object_camera_point.header.stamp = rospy.Time.now()  # Use the latest available transform
 
 # Set the object's coordinates in the camera frame
-object_camera_point.pose.position.x = 0.4905
-object_camera_point.pose.position.y = 0.066
-object_camera_point.pose.position.z = 0.9693
 
+object_camera_point.pose.position.x = 0.642
+object_camera_point.pose.position.y = 0.009
+object_camera_point.pose.position.z = -0.020
 
+rate = rospy.Rate(10.0)
 
-try:
-    # Transform the object's position to the base_link frame
-    object_base_link_point = tf_buffer.lookup_transform("head_rgbd_sensor_link", "base_link", rospy.Time())
-    transform_pose = tf2_geometry_msgs.do_transform_pose(object_camera_point, object_base_link_point)
-    #object_base_link_point = tf_listener.transformPose("base_link", object_camera_point)
+while not rospy.is_shutdown():
+    try:
+        # Transform the object's position to the base_link frame
+        object_base_link_point = tf_buffer.lookup_transform("head_rgbd_sensor_link", "base_link", rospy.Time())
+        transform_pose = tf2_geometry_msgs.do_transform_pose(object_camera_point, object_base_link_point)
+        #object_base_link_point = tf_listener.transformPose("base_link", object_camera_point)
     
-    # Extract the transformed coordinates
-    #base_link_x = object_base_link_point.point.x
-    #base_link_y = object_base_link_point.point.y
-    #base_link_z = object_base_link_point.point.z
-    print(transform_pose)
+        # Extract the transformed coordinates
+        #base_link_x = object_base_link_point.point.x
+        #base_link_y = object_base_link_point.point.y
+        #base_link_z = object_base_link_point.point.z
+        print(transform_pose)
     
-    # Now, base_link_x, base_link_y, and base_link_z contain the object's coordinates in the base_link frame.
-except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
-    rospy.logwarn(f"Transform failed: {e}")
+        # Now, base_link_x, base_link_y, and base_link_z contain the object's coordinates in the base_link frame.
+    except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException) as e:
+        rospy.logwarn(f"Transform failed: {e}")
+        rate.sleep()
+        continue
+
+    rate.sleep()
 

@@ -24,21 +24,22 @@ class ForceToVelocityNode:
         self.pub_cmd_vel = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=10)
         rospy.on_shutdown(self.shutdown)
 
-    def check_force_trend(self, input_values, tolerance_threshold = 5, min_streak_length = 3):
+    def check_force_trend(self, tolerance_threshold = 5, min_streak_length = 3):
+        print(self.force_trend_values)
         dir = None
         streak = 0
         max_streak = 0
         is_trend_decreasing = False
         
-        for i in range(1, len(input_values)):
-            if input_values[i] <= input_values[i - 1] + tolerance_threshold:
+        for i in range(1, len(self.force_trend_values)):
+            if self.force_trend_values[i] <= self.force_trend_values[i - 1] + tolerance_threshold:
                 streak += 1
                 max_streak = max(max_streak, streak)
                 if streak >= min_streak_length:
                     is_trend_decreasing = True
             else:
                 streak = 0
-        print(max_streak)
+        # print(max_streak)
 
         if is_trend_decreasing == True:
             dir = 'Left'
@@ -53,8 +54,9 @@ class ForceToVelocityNode:
             # self.linear_velocity_y = -0.01 # pass this back to callback
             self.force_trend_values.append(force_angle)
             self.trend_value_count += 1
+            # print("decide direction", self.force_trend_values)
         else:
-            self.direction  = self.check_force_trend(self.force_trend_values)
+            self.direction  = self.check_force_trend()
 
         
         # if self.trend_value_set == True:
@@ -64,13 +66,12 @@ class ForceToVelocityNode:
     def force_callback(self, force_msg):
 
         if force_msg.data > -30.0 and self.in_loop == False:
-            print("first loop")
+            # print("first loop")
             self.linear_velocity = -0.01
             self.linear_velocity_y = 0.0
 
         else:
-            print("we in else")
-            print(self.direction)
+            # print("we in else")
             self.in_loop = True
             if force_msg.data > 15.0:
                 self.in_loop = False
@@ -95,7 +96,6 @@ class ForceToVelocityNode:
                 # self.in_loop = True
                 # if force_msg.data > 15.0:
                 #     self.in_loop = False
-                print(force_msg.data)
                 print("going left")
                 self.linear_velocity_y = 0.01
                 self.linear_velocity = 0.0
