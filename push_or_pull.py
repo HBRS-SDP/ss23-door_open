@@ -5,33 +5,32 @@ from geometry_msgs.msg import Twist
 from std_msgs.msg import Float32, Bool
 import time
 
+
 class ForceToVelocityNode:
     def __init__(self):
         rospy.init_node('force_to_velocity_node')
 
-        self.linear_velocity_x = -0.05
+        self.speak=1
+        self.linear_velocity = -0.05
         self.angular_velocity = 0.0
         self.linear_velocity_y = 0.0
-        self.force_angle = 0.0
         self.angular_published = False
-
+        self.pushpull_flag = None
         self.force_threshold = -30.0
-        self.force_another_threshold = -50
         self.direction = None # earlier is_left
-        self.in_loop = False
+
         self.trend_value_count = 0
         self.force_trend_values = []
-        self.sub_force = rospy.Subscriber('/force_angles', Float32, self.force_callback)
+        self.force_feedback_sub = rospy.Subscriber('force_threshold', Bool, self.get_force_feedback)
         self.pub_cmd_vel = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=10)
-        self.force_feedback_sub = rospy.Subscriber('force', Bool, self.get_force_feedback)
+        self.say_pub = rospy.Publisher('/say', String, latch=True, queue_size=1)
+        
         rospy.on_shutdown(self.shutdown)
 
-    def get_force_feedback(self, msg):
-        if msg.data:
-            self.push_door_motion()
-        else:
-            self.pull_door_motion()
-
+    def say(self, sentence):
+        say_msg = String()
+        say_msg.data = sentence
+        self.say_pub.publish(say_msg)
 
     def check_force_trend(self, tolerance_threshold = 5, min_streak_length = 3):
         print(self.force_trend_values)
@@ -67,69 +66,23 @@ class ForceToVelocityNode:
         else:
             self.direction  = self.check_force_trend()
 
-        
-        # if self.trend_value_set == True:
-        #    self.direction  = check_force_trend(self.force_trend_values)
 
-    def pull_door_motion(self):
-        if self.force_angle.data > -30.0 and self.in_loop == False:
-            # print("first loop")
-            self.linear_velocity_x = -0.01
+    def get_force_feedback(self, force_msg):
+
+        if force_msg.data and self.speak:
+            rospy.logerr('[door-open]Cannot pull. Force feedback exceeds threshold. Trying other direction...')
+            self.speak=0
+            self.say("Cannot pull. Force feedback exceeds threshold.")
+
+            self.linear_velocity = -0.01
             self.linear_velocity_y = 0.0
 
         else:
-            # print("we in else")
-            self.in_loop = True
-            if self.force_angle.data > 15.0:
-                self.in_loop = False
-            if self.direction == None:
-                self.linear_velocity_y = -0.01
-                self.decide_direction_of_movement(self.force_angle.data)
+            self.linear_velocity = 0.01
+            self.linear_velocity_y = 0.0
+
+            self.pushpull_flag = 'Push'
             
-
-            self.linear_velocity_x = 0.0
-
-            if self.direction == 'Right':# and self.force_angle.data > -33.0:
-                # self.in_loop = True
-                # if self.force_angle.data > 15.0:
-                #     self.in_loop = False
-                print("going right")
-                print(self.direction)
-                self.linear_velocity_y = -0.01
-            if self.direction == 'Left':
-                self.linear_velocity_y = 0.0
-                print("going left")
-                self.linear_velocity_y = 0.01
-                self.linear_velocity_x = 0.0
-
-    def push_door_motion(self):
-        self.linear_velocity_x = 0.01
-        self.linear_velocity_y = 0.0
-
-        time.sleep(2)
-
-        self.gripper_controller.open()
-        rospy.loginfo('Door Handle released')
-
-        self.moveToNeutral()
-
-        time.sleep(2)
-
-
-        self.linear_velocity = 0.0
-        self.linear_velocity_y = 0.1
-
-        time.sleep(2)
-
-
-        self.linear_velocity = 0.1
-        self.linear_velocity_y = 0.0
-
-    def force_callback(self, force_angle):
-        print(force_angle)
-
-        self.force_angle=force_angle
-
 
     def shutdown(self):
         cmd_vel_msg = Twist()
@@ -139,9 +92,8 @@ class ForceToVelocityNode:
         rate = rospy.Rate(10)  # 10 Hz
 
         while not rospy.is_shutdown():
-            self.pull_door_motion()
             cmd_vel_msg = Twist()
-            cmd_vel_msg.linear.x = self.linear_velocity_x
+            cmd_vel_msg.linear.x = self.linear_velocity
             cmd_vel_msg.linear.y = self.linear_velocity_y
             cmd_vel_msg.angular.z = self.angular_velocity
 

@@ -149,9 +149,9 @@ class ForceSensorCapture(object):
 
 def calculate_force():
 
-    pub = rospy.Publisher('force',Bool, queue_size = 10)
-    pub_force = rospy.Publisher('force_values',Float32, queue_size = 10)
-    pub_max_force = rospy.Publisher('max_force',Float32, queue_size = 10)
+    pub = rospy.Publisher('force_threshold',Bool, queue_size = 10)
+    # pub_force = rospy.Publisher('force_values',Float32, queue_size = 10)
+    pub_force_angle = rospy.Publisher('force_angles',Float32, queue_size = 10)
     # Start force sensor capture
     force_sensor_capture = ForceSensorCapture()
 
@@ -184,23 +184,23 @@ def calculate_force():
             post_angle=force_sensor_capture.get_current_angle()
 
         #print(post_force_list[0][0],post_force_list[1][0],post_force_list[2][0])
-            max_force = get_max_directional_force(post_force_list[0][0],post_force_list[1][0],post_force_list[2][0])
-            median_angles_list.append(max_force)
-        med = statistics.median(median_angles_list)
-        print(med)
-        pub_max_force.publish(med)
+            force_angle = get_max_directional_force(post_force_list[0][0],post_force_list[1][0],post_force_list[2][0])
+            median_angles_list.append(force_angle)
+        median_angle = statistics.median(median_angles_list)
+        # print(median_angle)
+        pub_force_angle.publish(median_angle)
         median_angles_list=[]
 
 
         # Computing difference from initial and new force sensor readings
 
         force_difference = compute_difference(pre_force_list, post_force_list,pre_angle,post_angle)
-        pub_force.publish(force_difference)
+        # pub_force.publish(force_difference)
         if force_difference > 45:
             pub.publish(True)
         else:
             pub.publish(False)
-        #print(force_difference)
+        print(force_difference)
         rospy.sleep(0.1)
 
 
