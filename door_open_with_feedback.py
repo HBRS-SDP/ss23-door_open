@@ -159,17 +159,25 @@ class DoorOpen :
         self.gripper_controller.close()
         rospy.loginfo('Door Handle Unlatched')
         rospy.Rate(10)
+        
 
         # while not rospy.is_shutdown():
             
         #     rospy.sleep(0.1)
         rospy.loginfo('Received force feedback')
         cmd_vel_msg = Twist()
-        cmd_vel_msg.linear.x = -0.1
+        cmd_vel_msg.linear.x = -0.05
         self.pub_cmd_vel.publish(cmd_vel_msg)
-        time.sleep(1)
+        time.sleep(0.5)
         cmd_vel_msg.linear.x = 0.0
         self.pub_cmd_vel.publish(cmd_vel_msg)
+        # p.positions= [0.35, -0.42, 0.0, -1.00, np.round(np.deg2rad(-90), 2)]
+        # p.velocities = [0, 0, 0, 0, 0]
+        # p.time_from_start = rospy.Duration(1)
+        # traj.points = [p]
+        # goal.trajectory = traj
+        # self.action_cli.send_goal(goal)
+        # self.action_cli.wait_for_result() 
 
         
 

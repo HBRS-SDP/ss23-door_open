@@ -192,9 +192,25 @@ class pickAndPour :
         self.gripper_controller.close()
         rospy.loginfo('Door Handle Unlatched')
 
-        # now move back a bit
-        #self.movebackwards()
-        #rospy.loginfo('Moved back a bit')
+    def move_to_home_position(self):
+
+        # open gripper by defaults
+        self.gripper_controller.open()
+
+        # Go to a position from which door will be pushed
+        goal = control_msgs.msg.FollowJointTrajectoryGoal()
+        traj = trajectory_msgs.msg.JointTrajectory()
+        traj.joint_names = ["arm_lift_joint", "arm_flex_joint", "arm_roll_joint", "wrist_flex_joint", "wrist_roll_joint"]
+        p = trajectory_msgs.msg.JointTrajectoryPoint()
+
+        p.positions= [0.0, 0.0, 0.0, -1.5, 0]
+        p.velocities = [0, 0, 0, 0, 0]
+        p.time_from_start = rospy.Duration(1)
+        traj.points = [p]
+        goal.trajectory = traj
+        self.action_cli.send_goal(goal)
+        self.action_cli.wait_for_result()
+        rospy.loginfo('Door pushing position ready')
 
         
 def main():
@@ -202,8 +218,9 @@ def main():
     # pick_pour.pick()
     # pick_pour.moveSideWays()
     # pick_pour.moveToNeutral()
-    pick_pour.one_func()
+    # pick_pour.moveToNeutral()
 
+    pick_pour.move_to_home_position()
 
 if __name__== "__main__" :
     main()

@@ -6,7 +6,7 @@
 import math
 # import os
 import sys
-from std_msgs.msg import Bool, Float32
+from std_msgs.msg import Bool, Float64
 # import actionlib
 import numpy as np
 from scipy import signal
@@ -151,7 +151,7 @@ def calculate_force():
 
     pub = rospy.Publisher('force_threshold',Bool, queue_size = 10)
     # pub_force = rospy.Publisher('force_values',Float32, queue_size = 10)
-    pub_force_angle = rospy.Publisher('force_angles',Float32, queue_size = 10)
+    pub_force_angle = rospy.Publisher('force_angles',Float64, queue_size = 10)
     # Start force sensor capture
     force_sensor_capture = ForceSensorCapture()
 
@@ -200,7 +200,7 @@ def calculate_force():
             pub.publish(True)
         else:
             pub.publish(False)
-        print(force_difference)
+        print(median_angle)
         rospy.sleep(0.1)
 
 

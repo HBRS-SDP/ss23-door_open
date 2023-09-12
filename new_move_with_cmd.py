@@ -2,18 +2,33 @@
 
 import rospy
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Float32, Bool
+from std_msgs.msg import Float64, Bool
+from nav_msgs.msg import Odometry
+import control_msgs.msg
+import trajectory_msgs.msg
+import controller_manager_msgs.srv
 import time
+import numpy as np
+#refactor
+from mas_hsr_gripper_controller.gripper_controller import GripperController
+from mdr_move_arm_action.msg import MoveArmAction, MoveArmGoal
+import actionlib
+
+
+
 
 class ForceToVelocityNode:
     def __init__(self):
         rospy.init_node('force_to_velocity_node')
-
-        self.linear_velocity_x = -0.05
+        #######################################3change vel
+        self.linear_velocity_x = -0.00
         self.angular_velocity = 0.0
         self.linear_velocity_y = 0.0
         self.force_angle = 0.0
         self.angular_published = False
+
+        self.door_open_status = False
+        self.previous_x_position = None
 
         self.force_threshold = -30.0
         self.force_another_threshold = -50
@@ -21,16 +36,40 @@ class ForceToVelocityNode:
         self.in_loop = False
         self.trend_value_count = 0
         self.force_trend_values = []
-        self.sub_force = rospy.Subscriber('/force_angles', Float32, self.force_callback)
+        self.sub_force = rospy.Subscriber('/force_angles', Float64, self.force_callback)
         self.pub_cmd_vel = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=10)
-        self.force_feedback_sub = rospy.Subscriber('force', Bool, self.get_force_feedback)
+        self.force_feedback_sub = rospy.Subscriber('force_threshold', Bool, self.get_force_feedback)
+        self.odom_sub = rospy.Subscriber('/hsrb/odom', Odometry, self.get_odom_data)
+        self.gripper_controller = GripperController()
+        self.move_arm_client = actionlib.SimpleActionClient("move_arm_server", MoveArmAction)
+        rospy.loginfo('[pickup] Waiting for %s server', "move_arm_server")
+                #initialising the action client for pouring
+        self.action_cli = actionlib.SimpleActionClient(
+            '/hsrb/arm_trajectory_controller/follow_joint_trajectory',
+            control_msgs.msg.FollowJointTrajectoryAction)
+        # wait for the action server to establish connection
+        self.action_cli.wait_for_server()
+        
+        self.move_arm_client.wait_for_server() 
+        print("All good!!")
         rospy.on_shutdown(self.shutdown)
 
     def get_force_feedback(self, msg):
-        if msg.data:
-            self.push_door_motion()
-        else:
-            self.pull_door_motion()
+        # start_odom = self.odom_pose_x
+        # if abs(start_odom)-abs(self.odom_pose_x)
+
+ 
+
+        print(msg.data)
+        # if msg.data:
+        self.push_door_motion()
+            
+        # else:
+        #     print('dfhdh')
+        # self.pull_door_motion()
+
+    def get_odom_data(self,msg):
+        self.odom_pose_x = msg.pose.pose.position.x
 
 
     def check_force_trend(self, tolerance_threshold = 5, min_streak_length = 3):
@@ -55,7 +94,6 @@ class ForceToVelocityNode:
         else:
             dir = 'Right'
         
-        print(dir)
         return dir
 
     def decide_direction_of_movement(self, force_angle):
@@ -72,7 +110,7 @@ class ForceToVelocityNode:
         #    self.direction  = check_force_trend(self.force_trend_values)
 
     def pull_door_motion(self):
-        if self.force_angle.data > -30.0 and self.in_loop == False:
+        if self.force_angle > -30.0 and self.in_loop == False:
             # print("first loop")
             self.linear_velocity_x = -0.01
             self.linear_velocity_y = 0.0
@@ -80,14 +118,15 @@ class ForceToVelocityNode:
         else:
             # print("we in else")
             self.in_loop = True
-            if self.force_angle.data > 15.0:
+            if self.force_angle > 15.0:
                 self.in_loop = False
             if self.direction == None:
                 self.linear_velocity_y = -0.01
-                self.decide_direction_of_movement(self.force_angle.data)
+                self.decide_direction_of_movement(self.force_angle)
             
 
             self.linear_velocity_x = 0.0
+            self.direction = 'Right'
 
             if self.direction == 'Right':# and self.force_angle.data > -33.0:
                 # self.in_loop = True
@@ -102,33 +141,74 @@ class ForceToVelocityNode:
                 self.linear_velocity_y = 0.01
                 self.linear_velocity_x = 0.0
 
-    def push_door_motion(self):
-        self.linear_velocity_x = 0.01
-        self.linear_velocity_y = 0.0
+    def moveToNeutral(self):
+        move_arm_goal = MoveArmGoal()
+        move_arm_goal.goal_type = MoveArmGoal.NAMED_TARGET
+        move_arm_goal.named_target = "neutral"
+        self.move_arm_client.send_goal(move_arm_goal)
+        self.move_arm_client.wait_for_result()
+        self.move_arm_client.get_result()
+        rospy.loginfo("Back to neutral position")
+        
+        rospy.sleep(5)
+    
+    def move_to_home_position(self):
+        print("Moving to home position")
 
-        time.sleep(2)
+        # open gripper by defaults
+        self.gripper_controller.open()
+
+        # Go to a position from which door will be pushed
+        goal = control_msgs.msg.FollowJointTrajectoryGoal()
+        traj = trajectory_msgs.msg.JointTrajectory()
+        traj.joint_names = ["arm_lift_joint", "arm_flex_joint", "arm_roll_joint", "wrist_flex_joint", "wrist_roll_joint"]
+        p = trajectory_msgs.msg.JointTrajectoryPoint()
+
+        p.positions= [0.0, 0.0, 0.0, -1.5, 0]
+        p.velocities = [0, 0, 0, 0, 0]
+        p.time_from_start = rospy.Duration(1)
+        traj.points = [p]
+        goal.trajectory = traj
+        self.action_cli.send_goal(goal)
+        self.action_cli.wait_for_result()
+        rospy.loginfo('Door pushing position ready')
+
+    def push_door_motion(self):
+        self.move_to_home_position()
+        self.linear_velocity_x = 0.0
+        self.linear_velocity_y = +0.05
+        time.sleep(3)
+        self.linear_velocity_x = 0.1
+        self.linear_velocity_y = 0.00
+        time.sleep(1)
+        self.linear_velocity_x = 0.01
+        current_x_position = self.odom_pose_x
+       
+        if self.previous_x_position is not None:
+            distance_x = abs(abs(current_x_position) - abs(self.previous_x_position))
+            print(distance_x,self.door_open_status)
+            #  print(current_x_position,self.door_open_status)
+            if distance_x >= 0.1 and not self.door_open_status :
+                rospy.loginfo("Flag raised! X-position difference is greater than 0.5 meter.")
+                self.door_open_status  = True
+                self.linear_velocity_x = 0.0
+                self.linear_velocity_y = 0.0
+            elif distance_x < 0.1:
+                rospy.loginfo("Flag reset. X-position difference is less than 0.5 meter.")
+                self.door_open_status  = False
+                self.linear_velocity_x = 0.05
+                self.linear_velocity_y = 0.0
+        else:
+            self.previous_x_position = current_x_position
+         
 
         self.gripper_controller.open()
         rospy.loginfo('Door Handle released')
 
-        self.moveToNeutral()
-
-        time.sleep(2)
-
-
-        self.linear_velocity = 0.0
-        self.linear_velocity_y = 0.1
-
-        time.sleep(2)
-
-
-        self.linear_velocity = 0.1
-        self.linear_velocity_y = 0.0
+        # self.moveToNeutral()
 
     def force_callback(self, force_angle):
-        print(force_angle)
-
-        self.force_angle=force_angle
+        self.force_angle=force_angle.data
 
 
     def shutdown(self):
@@ -139,7 +219,7 @@ class ForceToVelocityNode:
         rate = rospy.Rate(10)  # 10 Hz
 
         while not rospy.is_shutdown():
-            self.pull_door_motion()
+            # self.pull_door_motion()
             cmd_vel_msg = Twist()
             cmd_vel_msg.linear.x = self.linear_velocity_x
             cmd_vel_msg.linear.y = self.linear_velocity_y
