@@ -1,1 +1,0 @@
-/home/ss23-sdp-door/ss23-door_open/worksapce/devel/.private/ss23-door-room/share/ss23-door-room/cmake/ss23-door-roomConfig-version.cmake

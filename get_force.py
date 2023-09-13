@@ -14,10 +14,7 @@ import statistics
 import time 
 # from actionlib_msgs.msg import GoalStatus
 from geometry_msgs.msg import WrenchStamped
-# import tf
-# import geometry_msgs.msg
-# from  tf.transformations import euler_from_quaternion
-# from geometry_msgs.msg import Quaternion
+
 
 import rospy
 from sensor_msgs.msg import JointState
@@ -183,11 +180,9 @@ def calculate_force():
         # Getting current angle
             post_angle=force_sensor_capture.get_current_angle()
 
-        #print(post_force_list[0][0],post_force_list[1][0],post_force_list[2][0])
             force_angle = get_max_directional_force(post_force_list[0][0],post_force_list[1][0],post_force_list[2][0])
             median_angles_list.append(force_angle)
         median_angle = statistics.median(median_angles_list)
-        # print(median_angle)
         pub_force_angle.publish(median_angle)
         median_angles_list=[]
 
@@ -195,7 +190,6 @@ def calculate_force():
         # Computing difference from initial and new force sensor readings
 
         force_difference = compute_difference(pre_force_list, post_force_list,pre_angle,post_angle)
-        # pub_force.publish(force_difference)
         if force_difference > 45:
             pub.publish(True)
         else:

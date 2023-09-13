@@ -1,5 +1,0 @@
-ss23-door-room
-/home/ss23-sdp-door/ss23-door_open/worksapce/devel/.private/ss23-door-room/cmake.lock /home/ss23-sdp-door/ss23-door_open/worksapce/devel/./cmake.lock
-/home/ss23-sdp-door/ss23-door_open/worksapce/devel/.private/ss23-door-room/lib/pkgconfig/ss23-door-room.pc /home/ss23-sdp-door/ss23-door_open/worksapce/devel/lib/pkgconfig/ss23-door-room.pc
-/home/ss23-sdp-door/ss23-door_open/worksapce/devel/.private/ss23-door-room/share/ss23-door-room/cmake/ss23-door-roomConfig.cmake /home/ss23-sdp-door/ss23-door_open/worksapce/devel/share/ss23-door-room/cmake/ss23-door-roomConfig.cmake
-/home/ss23-sdp-door/ss23-door_open/worksapce/devel/.private/ss23-door-room/share/ss23-door-room/cmake/ss23-door-roomConfig-version.cmake /home/ss23-sdp-door/ss23-door_open/worksapce/devel/share/ss23-door-room/cmake/ss23-door-roomConfig-version.cmake

@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
-import sys
 import rospy
 import actionlib
-import random
 import numpy as np
 from std_msgs.msg import Bool,String
 import time
@@ -11,17 +9,13 @@ import control_msgs.msg
 import trajectory_msgs.msg
 import controller_manager_msgs.srv
 from geometry_msgs.msg import PoseStamped, Twist
-from std_msgs.msg import Bool
-
-from mdr_pickup_action.msg import PickupAction, PickupGoal
-from mdr_move_base_action.msg import MoveBaseAction, MoveBaseGoal
 from mdr_move_arm_action.msg import MoveArmAction, MoveArmGoal
 from mas_hsr_gripper_controller.gripper_controller import GripperController
+from new_move_with_cmd import ForceToVelocityNode
 
 class DoorOpen :
     def __init__(self):
         rospy.init_node("DoorOpen")
-
         # intialize gripper controllerr
         self.gripper_controller = GripperController()   
         self.action_cli = actionlib.SimpleActionClient(
@@ -29,10 +23,9 @@ class DoorOpen :
             control_msgs.msg.FollowJointTrajectoryAction)
         # wait for the action server to establish connection
         self.action_cli.wait_for_server()
-        rospy.loginfo("Connected to server for executing pouring")
+        rospy.loginfo("Connected to server for executing door opening")
 
         self.speak=1
-        self.direction_multiplier = 1
         self.wrist_direction = None
         self.say_pub = rospy.Publisher('/say', String, latch=True, queue_size=1)
         self.pub  = rospy.Publisher('Handle_unlatched', Bool, queue_size=10)
@@ -52,18 +45,19 @@ class DoorOpen :
         #initialising the client for moving arm to neutral position
         try:
             self.move_arm_client = actionlib.SimpleActionClient("move_arm_server", MoveArmAction)
-            rospy.loginfo('[pickup] Waiting for %s server', "move_arm_server")
+            rospy.loginfo('[door_open] Waiting for %s server', "move_arm_server")
             self.move_arm_client.wait_for_server()
         except Exception as exc:
-            rospy.logerr('[pickup] %s server does not seem to respond: %s',
+            rospy.logerr('[door_open] %s server does not seem to respond: %s',
                         "move_arm_server", str(exc))
         print("All good!!")
+
+
     def get_force_feedback(self, msg):
         if msg.data and self.speak:
-            self.direction_multiplier = 1
-            rospy.logerr('[door-open]Cannot pull. Force feedback exceeds threshold. Trying other direction...')
+            rospy.loginfo('[door_open]Cannot pull. Force feedback exceeds threshold. Trying to push...')
             self.speak=0
-            self.say("Cannot pull. Force feedback exceeds threshold.")
+            self.say("Cannot pull. Trying to push.")
 
     def save_torque(self,msg):
         self.torque_val=msg.wrench.torque.x
@@ -92,7 +86,6 @@ class DoorOpen :
             self.wrist_direction='cw'
         self.say(str(self.wrist_direction))
 
-
     def say(self, sentence):
         say_msg = String()
         say_msg.data = sentence
@@ -106,9 +99,7 @@ class DoorOpen :
         self.move_arm_client.wait_for_result()
         self.move_arm_client.get_result()
         rospy.loginfo("Back to neutral position")
-        
         rospy.sleep(5)
-
 
     def one_func(self):
         self.speak=1
@@ -119,8 +110,7 @@ class DoorOpen :
         traj = trajectory_msgs.msg.JointTrajectory()
         traj.joint_names = ["arm_lift_joint", "arm_flex_joint", "arm_roll_joint", "wrist_flex_joint", "wrist_roll_joint"]
         p = trajectory_msgs.msg.JointTrajectoryPoint()
-
-
+        # Move to initial grabbing position
         angles= list(range(0, -100, -15))
         inRadians= np.deg2rad(angles)
         wrist_roll_angles= np.round(inRadians, 2)
@@ -171,6 +161,8 @@ class DoorOpen :
         time.sleep(0.5)
         cmd_vel_msg.linear.x = 0.0
         self.pub_cmd_vel.publish(cmd_vel_msg)
+        move_base_node = ForceToVelocityNode(self.wrist_direction)
+        move_base_node.run()
         # p.positions= [0.35, -0.42, 0.0, -1.00, np.round(np.deg2rad(-90), 2)]
         # p.velocities = [0, 0, 0, 0, 0]
         # p.time_from_start = rospy.Duration(1)
