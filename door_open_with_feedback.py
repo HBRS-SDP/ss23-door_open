@@ -25,20 +25,18 @@ class DoorOpen :
         self.action_cli.wait_for_server()
         rospy.loginfo("Connected to server for executing door opening")
 
-        self.speak=1
-        self.wrist_direction = None
+        self.speak=1 # Flag for speech command
+        self.wrist_direction = None # Door unlatch direction flag 
         self.say_pub = rospy.Publisher('/say', String, latch=True, queue_size=1)
         self.pub  = rospy.Publisher('Handle_unlatched', Bool, queue_size=10)
         self.goal = control_msgs.msg.FollowJointTrajectoryGoal()
         self.traj = trajectory_msgs.msg.JointTrajectory()
         self.traj.joint_names = ["arm_lift_joint", "arm_flex_joint", "arm_roll_joint", "wrist_flex_joint", "wrist_roll_joint"]
         self.p = trajectory_msgs.msg.JointTrajectoryPoint()
-        #receive torques
+        # Receive torque values
         self.torque_sub = rospy.Subscriber('/hsrb/wrist_wrench/compensated', Bool, self.save_torque)
         self.torque_val = 0
         self.force_feedback_sub = rospy.Subscriber('force_threshold', Bool, self.get_force_feedback)
-
-
         self.pub_cmd_vel = rospy.Publisher('/hsrb/command_velocity', Twist, queue_size=10)
 
 
@@ -50,8 +48,8 @@ class DoorOpen :
         except Exception as exc:
             rospy.logerr('[door_open] %s server does not seem to respond: %s',
                         "move_arm_server", str(exc))
-        print("All good!!")
 
+        rospy.loginfo('All initializations done')
 
     def get_force_feedback(self, msg):
         if msg.data and self.speak:
@@ -63,7 +61,7 @@ class DoorOpen :
         self.torque_val=msg.wrench.torque.x
 
     def get_door_handle_allignment(self):
-        #decide clockwise or anticlockwise rotation
+        # Decide clockwise or anticlockwise rotation
         self.p.positions= [0.35, -0.42, 0.0, -1.00, np.round(np.deg2rad(-55), 2)]
         self.p.velocities = [0, 0, 0, 0, 0]
         self.p.time_from_start = rospy.Duration(1)
@@ -72,6 +70,7 @@ class DoorOpen :
         self.action_cli.send_goal(self.goal)
         self.action_cli.wait_for_result()
         time.sleep(1)
+
         if self.torque_val>0.5:
             self.p.positions= [0.35, -0.42, 0.0, -1.00, np.round(np.deg2rad(-135), 2)]
             self.p.time_from_start = rospy.Duration(1)
@@ -79,27 +78,22 @@ class DoorOpen :
             self.goal.trajectory = self.traj
             self.action_cli.send_goal(self.goal)
             print(self.action_cli.wait_for_result())
-            #Anti-clockwise wrist rotation
+            # Anti-clockwise wrist rotation
             self.wrist_direction='acw'
         else:
-            #Clockwise wrist rotation
+            # Clockwise wrist rotation
             self.wrist_direction='cw'
-        self.say(str(self.wrist_direction))
+
+        # Speak out the write rotation direction
+        if self.wrist_direction == 'cw':
+            self.say('Clock wise rotation')
+        elif self.wrist_direction == 'acw':
+            self.say('Anti-Clock wise rotation')
 
     def say(self, sentence):
         say_msg = String()
         say_msg.data = sentence
         self.say_pub.publish(say_msg)
-
-    def moveToNeutral(self):
-        move_arm_goal = MoveArmGoal()
-        move_arm_goal.goal_type = MoveArmGoal.NAMED_TARGET
-        move_arm_goal.named_target = "neutral"
-        self.move_arm_client.send_goal(move_arm_goal)
-        self.move_arm_client.wait_for_result()
-        self.move_arm_client.get_result()
-        rospy.loginfo("Back to neutral position")
-        rospy.sleep(5)
 
     def one_func(self):
         self.speak=1
@@ -150,10 +144,6 @@ class DoorOpen :
         rospy.loginfo('Door Handle Unlatched')
         rospy.Rate(10)
         
-
-        # while not rospy.is_shutdown():
-            
-        #     rospy.sleep(0.1)
         rospy.loginfo('Received force feedback')
         cmd_vel_msg = Twist()
         cmd_vel_msg.linear.x = -0.05
@@ -163,28 +153,11 @@ class DoorOpen :
         self.pub_cmd_vel.publish(cmd_vel_msg)
         move_base_node = ForceToVelocityNode(self.wrist_direction)
         move_base_node.run()
-        # p.positions= [0.35, -0.42, 0.0, -1.00, np.round(np.deg2rad(-90), 2)]
-        # p.velocities = [0, 0, 0, 0, 0]
-        # p.time_from_start = rospy.Duration(1)
-        # traj.points = [p]
-        # goal.trajectory = traj
-        # self.action_cli.send_goal(goal)
-        # self.action_cli.wait_for_result() 
-
-        
-
-
-        # now move back a bit
-        #self.movebackwards()
-        #rospy.loginfo('Moved back a bit')
-
         
 def main():
     door_open= DoorOpen()
     door_open.one_func()
     rospy.spin()
     
-
-
 if __name__== "__main__" :
     main()
