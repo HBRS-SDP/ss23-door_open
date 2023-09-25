@@ -20,9 +20,15 @@
 </div>
 
 
-ERL Smart City Competition [(ERL Smart City)](https://eu-robotics.net/eurobotics/activities/european-robotics-league/) includes an episode in which the robot must open a hinged door with different configurations.​
+ERL Smart City Competition [(ERL Smart City)](https://eu-robotics.net/eurobotics/activities/european-robotics-league/) includes an episode in which the robot must open a hinged door with different configurations.​ The goal of this project is to open the doors using a robotic arm from the inside and outside of the C069 lab.​
 
-## Aim:  To open the doors using a robotic arm from the inside and outside of the C069 lab.​
+## Table of Contents
+- [Approach](https://github.com/HBRS-SDP/ss23-door_open/edit/grip_door/README.md#approach)
+- [Requirements](#requirements)
+- [Usage](#usage)
+- [Object Detection](#object-detection)
+- [Description](#description)
+- [References](#references)
 
 ## Approach:​
 
@@ -68,7 +74,7 @@ For push/pull action, execute the new_move_with_cmd.py script. This script perfo
     python3 new_move_with_cmd.py
 
 
-## About Object Detection
+## Object Detection
 
 YOLOv5 Handle Detection Approach
   <img width="582" alt="overall_flow" src="https://github.com/HBRS-SDP/ss23-door_open/assets/104180642/abe1901a-c5e1-403b-8fd5-219ab5ff7893">
@@ -90,7 +96,7 @@ YOLOv5 Handle Detection Approach
 - **Result:**
   - Obtained bounding box coordinates for 3D detection.
 
-## Logic 
+## Description
 #### Grasp the door handle
 * After obtaining the 3D coordinates of the door handle using a detection algorithm
 
