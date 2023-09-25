@@ -23,7 +23,7 @@
 ERL Smart City Competition [(ERL Smart City)](https://eu-robotics.net/eurobotics/activities/european-robotics-league/) includes an episode in which the robot must open a hinged door with different configurations.​ The goal of this project is to open the doors using a robotic arm from the inside and outside of the C069 lab.​
 
 ## Table of Contents
-- [Approach](https://github.com/HBRS-SDP/ss23-door_open/edit/grip_door/README.md#approach)
+- [Approach](#approach)
 - [Requirements](#requirements)
 - [Usage](#usage)
 - [Object Detection](#object-detection)
