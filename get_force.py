@@ -1,18 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Copyright (C) 2016 Toyota Motor Corporation
-"""Speak Object Weight Sample"""
 
 import math
-# import os
 import sys
 from std_msgs.msg import Bool, Float64
-# import actionlib
 import numpy as np
 from scipy import signal
 import statistics
 import time 
-# from actionlib_msgs.msg import GoalStatus
 from geometry_msgs.msg import WrenchStamped
 
 
