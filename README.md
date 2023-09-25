@@ -1,8 +1,24 @@
 # Through the door - Open Door Using Toyota HSR
 
-### &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Push open the door &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Pull open the door
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![CBFFB0ED-234E-45A6-BD4D-B59667E8C141](https://github.com/HBRS-SDP/ss23-door_open/assets/47587089/a55c0534-9eb5-4d66-b825-07582c359031)
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![1295C3D0-0FCA-4D1E-AE50-43908924A982](https://github.com/HBRS-SDP/ss23-door_open/assets/47587089/896b1d15-31a9-4963-bd02-3fdf33db53a4)
+<div align="center">
+  <table>
+    <tr>
+      <td>
+        <div align="center">
+          <h3>Push open the door</h3>
+          <img src="https://github.com/HBRS-SDP/ss23-door_open/assets/47587089/a55c0534-9eb5-4d66-b825-07582c359031" alt="Push open the door">
+        </div>
+      </td>
+      <td>
+        <div align="center">
+          <h3>Pull open the door</h3>
+          <img src="https://github.com/HBRS-SDP/ss23-door_open/assets/47587089/896b1d15-31a9-4963-bd02-3fdf33db53a4" alt="Pull open the door">
+        </div>
+      </td>
+    </tr>
+  </table>
+</div>
+
 
 ERL Smart City Competition [(ERL Smart City)](https://eu-robotics.net/eurobotics/activities/european-robotics-league/) includes an episode in which the robot must open a hinged door with different configurations.​
 
@@ -15,18 +31,6 @@ We present an overview of our approach, illustrated in the diagram below:
 <img width="582" alt="overall_flow" src="https://github.com/HBRS-SDP/ss23-door_open/assets/47587089/512cbb90-8f47-4f9a-aad0-11a883e213cf">
 
 
-
-
-
-### 
-
-## Project Description
-
-text 
-
-## File Description 
-
-text
 
 ## Requirements
 
