@@ -69,9 +69,9 @@ To unlatch the door, run the door_open_with_feedback.py script. This script prov
 
 ### For Push/Pull Action:
 
-For push/pull action, execute the new_move_with_cmd.py script. This script performs the push or pull action.
+For push/pull action, execute the move_with_cmd.py script. This script performs the push or pull action.
 
-    python3 new_move_with_cmd.py
+    python3 move_with_cmd.py
 
 
 ## Object Detection
